@@ -1,32 +1,63 @@
+import pathlib
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
+from tensorflow import keras
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
 import plotly.express as px
 import streamlit as st
 import pandas as pd
+from PIL import Image
 
-st.title("Parkjira!")
+st.title("Image classification")
 
-
-code = """
-def helloWorld():
-    print("Hello pom!")
-"""
-show_btn = st.button("Show code!")
-if show_btn:
-    st.code(code, language="python")
+classNames = ['Daisy', 'Dandelion', 'Roses', 'Sunflowers', 'Tulips']
+img_height = 180
+img_width = 180
+new_model = tf.keras.models.load_model('fullmodel')
 
 
-age_int = st.number_input("Input a number")
-st.markdown(f"Your number is {age_int}")
+# Function to preprocess the image using TensorFlow utilities
+def preprocess_image(image):
+    img = tf.keras.utils.load_img(image, target_size=(img_height, img_width))
+    img_array = tf.keras.utils.img_to_array(img)
+    img_array = tf.expand_dims(img_array, 0)  # Create a batch dimension
+    return img_array
+
+# Function to make predictions
 
 
-df = pd.DataFrame({'col1': [1, 2, 3, 4, 8], 'col2': [5, 6, 7, 8, 10]})
-st.dataframe(df)
+def predict_class(image, model):
+    processed_image = preprocess_image(image)
+    predictions = model.predict(processed_image)
+    score = tf.nn.softmax(predictions[0])
+    return score
 
-show_line = st.button("Show linechart!")
-if show_line:
-    st.line_chart(df, x='col1', y='col2')
 
+# Upload images
+uploaded_files = st.file_uploader(
+    "Choose an image file", accept_multiple_files=True, type=['jpg', 'jpeg', 'png'])
 
-df = px.data.iris()  # iris is a pandas DataFrame
-fig = px.scatter(df, x="sepal_width", y="sepal_length")
+# Display predictions for uploaded images
+if uploaded_files:
+    for uploaded_file in uploaded_files:
+        # Read and display the uploaded image
+        image = Image.open(uploaded_file)
+        st.image(
+            image, caption=f"Uploaded Image: {uploaded_file.name}", use_column_width=True)
 
-st.plotly_chart(fig, key="iris", on_select="rerun")
+        # Save the uploaded image temporarily
+        image_path = f"temp_{uploaded_file.name}"
+        image.save(image_path)
+
+        # Predict the class of the image
+        score = predict_class(image_path, new_model)
+
+        # Display the prediction result
+        st.write(
+            f"Predicted Class for {uploaded_file.name}: {classNames[np.argmax(score)]}")
+
+        # Remove the temporary image file
+        import os
+        os.remove(image_path)
