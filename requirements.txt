@@ -5,3 +5,5 @@ matplotlib
 numpy
 Pillow
 tensorflow==2.15.0
+cv2
+opencv-python
