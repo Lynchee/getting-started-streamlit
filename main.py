@@ -88,7 +88,6 @@ st.title("Tomato Classification")
 tab1, tab2 = st.tabs(["Select tomato", "Upload tomato"])
 
 with tab1:
-
     # Selet a tomato
     tomatoList = [fname.split('.')[0]
                   for fname in os.listdir('data')] + ['all']
