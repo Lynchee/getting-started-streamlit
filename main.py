@@ -1,3 +1,4 @@
+import plotly.express as px
 import streamlit as st
 import pandas as pd
 
@@ -23,3 +24,9 @@ st.dataframe(df)
 show_line = st.button("Show linechart!")
 if show_line:
     st.line_chart(df, x='col1', y='col2')
+
+
+df = px.data.iris()  # iris is a pandas DataFrame
+fig = px.scatter(df, x="sepal_width", y="sepal_length")
+
+st.plotly_chart(fig, key="iris", on_select="rerun")
