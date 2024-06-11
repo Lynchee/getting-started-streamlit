@@ -2,12 +2,12 @@ import plotly.express as px
 import streamlit as st
 import pandas as pd
 
-st.title("Getting start")
+st.title("Parjira!")
 
 
 code = """
 def helloWorld():
-    print("Hello world!")
+    print("Hello pom!")
 """
 show_btn = st.button("Show code!")
 if show_btn:
