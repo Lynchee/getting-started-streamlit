@@ -15,7 +15,7 @@ st.title("Image classification")
 classNames = ['Daisy', 'Dandelion', 'Roses', 'Sunflowers', 'Tulips']
 img_height = 180
 img_width = 180
-new_model = tf.keras.models.load_model('fullmodel')
+new_model = tf.keras.models.load_model('fullmodel.h5')
 
 
 # Function to preprocess the image using TensorFlow utilities
