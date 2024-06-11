@@ -2,7 +2,7 @@ import plotly.express as px
 import streamlit as st
 import pandas as pd
 
-st.title("Parjira!")
+st.title("Parkjira!")
 
 
 code = """
