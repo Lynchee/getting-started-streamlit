@@ -3,5 +3,6 @@
 # requirements.txt
 
 - pip install streamlit
+- pandas
 
 `streamlit run main.py`
