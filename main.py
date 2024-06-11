@@ -20,7 +20,8 @@ new_model = tf.keras.models.load_model('fullmodel')
 
 # Function to preprocess the image using TensorFlow utilities
 def preprocess_image(image):
-    img = tf.keras.utils.load_img(image, target_size=(img_height, img_width))
+    img = image.resize((img_height, img_width))
+    # img = tf.keras.utils.load_img(image, target_size=(img_height, img_width))
     img_array = tf.keras.utils.img_to_array(img)
     img_array = tf.expand_dims(img_array, 0)  # Create a batch dimension
     return img_array
@@ -47,17 +48,9 @@ if uploaded_files:
         st.image(
             image, caption=f"Uploaded Image: {uploaded_file.name}", use_column_width=True)
 
-        # Save the uploaded image temporarily
-        image_path = f"temp_{uploaded_file.name}"
-        image.save(image_path)
-
         # Predict the class of the image
-        score = predict_class(image_path, new_model)
+        score = predict_class(image, new_model)
 
         # Display the prediction result
         st.write(
             f"Predicted Class for {uploaded_file.name}: {classNames[np.argmax(score)]}")
-
-        # Remove the temporary image file
-        import os
-        os.remove(image_path)
