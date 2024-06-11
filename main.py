@@ -10,35 +10,48 @@ import streamlit as st
 import pandas as pd
 from PIL import Image
 import cv2
-
+import os
 from tensorflow.keras.applications import EfficientNetB1
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
+import time
 
 
-NUM_CLASSES = 15
-IMG_SIZE = 224
+@st.cache_resource
+def getInitData():
+    IMG_SIZE = 224
+    CLASS_NAMES = {0: 'Banana Legs',
+                   1: 'Beefsteak',
+                   2: 'Blue Berries',
+                   3: 'Cherokee Purple',
+                   4: 'German Orange Strawberry',
+                   5: 'Green Zebra',
+                   6: 'Japanese Black Trifele',
+                   7: 'Kumato',
+                   8: 'Oxheart',
+                   9: 'Roma',
+                   10: 'San Marzano',
+                   11: 'Sun Gold',
+                   12: 'Supersweet 100',
+                   13: 'Tigerella',
+                   14: 'Yellow Pear'
+                   }
+    return IMG_SIZE, CLASS_NAMES
 
-classNames = {0: 'Banana Legs',
-              1: 'Beefsteak',
-              2: 'Blue Berries',
-              3: 'Cherokee Purple',
-              4: 'German Orange Strawberry',
-              5: 'Green Zebra',
-              6: 'Japanese Black Trifele',
-              7: 'Kumato',
-              8: 'Oxheart',
-              9: 'Roma',
-              10: 'San Marzano',
-              11: 'Sun Gold',
-              12: 'Supersweet 100',
-              13: 'Tigerella',
-              14: 'Yellow Pear'
-              }
 
-# Load the trained model
-model = tf.keras.models.load_model('tomato.h5')
+IMG_SIZE, CLASS_NAMES = getInitData()
+
+
+@st.cache_resource
+def getModel():
+    # Load the trained model
+    # Fetch data from URL here, and then clean it up.
+    model = tf.keras.models.load_model('tomato.h5')
+    return model
+
+
+model = getModel()
 
 
 # Function to preprocess the image using TensorFlow utilitie
@@ -67,38 +80,103 @@ def predict_class(processed_image, model):
     return score
 
 
-# Upload images
-uploaded_files = st.file_uploader(
-    "Choose an image file", accept_multiple_files=True, type=['jpg', 'jpeg', 'png'])
+st.title("Tomato Classification")
 
-# Display predictions for uploaded images
-if uploaded_files:
-    for uploaded_file in uploaded_files:
-        # Read and display the uploaded image
-        image = Image.open(uploaded_file)
-        # st.image(
-        #     image, caption=f"Uploaded Image: {uploaded_file.name}", use_column_width=True)
 
+# ---------------------------------------- Tomato Selection ------------------------------------------
+
+tab1, tab2 = st.tabs(["Select tomato", "Upload tomato"])
+
+with tab1:
+
+    # Selet a tomato
+    tomatoList = [fname.split('.')[0]
+                  for fname in os.listdir('data')] + ['all']
+
+    selectedOption = st.selectbox("Select a tomato", tomatoList)
+
+    if selectedOption == 'all':
+        for _selectedOption in tomatoList[:-1]:
+            # Preprocessing image
+            image = tf.keras.utils.load_img(f'data/{_selectedOption}.png')
+            processed_image, edges = preprocess_image(image)
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.image(f'data/{_selectedOption}.png',
+                         caption=f"{_selectedOption}", use_column_width=True)
+
+            with col2:
+                st.image(edges, caption=f"Edge Image", use_column_width=True)
+
+            with col3:
+                st.image(processed_image.numpy()/255.0,
+                         caption=f"CH4 Image", use_column_width=True)
+            with col4:
+                # Predict the class of the image
+                score = predict_class(processed_image, model)
+
+                # Display the prediction result
+                st.write(
+                    f"Predicted Class: ")
+                st.write(CLASS_NAMES[score])
+    else:
         # Preprocessing image
+        image = tf.keras.utils.load_img(f'data/{selectedOption}.png')
         processed_image, edges = preprocess_image(image)
 
-        col1, col2, col3 = st.columns(3)
-
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.image(
-                image, caption=f"Uploaded Image: {uploaded_file.name}", use_column_width=True)
+            st.image(f'data/{selectedOption}.png',
+                     caption=f"{selectedOption}", use_column_width=True)
 
         with col2:
-            st.image(
-                edges, caption=f"Edge Image", use_column_width=True)
+            st.image(edges, caption=f"Edge Image", use_column_width=True)
 
         with col3:
-            st.image(
-                processed_image.numpy()/255.0, caption=f"CH4 Image", use_column_width=True)
+            st.image(processed_image.numpy()/255.0,
+                     caption=f"CH4 Image", use_column_width=True)
+        with col4:
+            # Predict the class of the image
+            score = predict_class(processed_image, model)
 
-        # Predict the class of the image
-        score = predict_class(processed_image, model)
+            # Display the prediction result
+            st.write(
+                f"Predicted Class: ")
+            st.write(CLASS_NAMES[score])
 
-        # Display the prediction result
-        st.write(
-            f"Predicted Class: {classNames[score]}")
+with tab2:
+
+    # Upload images
+    uploaded_files = st.file_uploader(
+        "Choose an image file", accept_multiple_files=True, type=['jpg', 'jpeg', 'png'])
+
+    # Display predictions for uploaded images
+    if uploaded_files:
+        for uploaded_file in uploaded_files:
+            # Read and display the uploaded image
+            image = Image.open(uploaded_file)
+
+            # Preprocessing image
+            processed_image, edges = preprocess_image(image)
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.image(
+                    image, caption=f"Uploaded Image: {uploaded_file.name}", use_column_width=True)
+
+            with col2:
+                st.image(
+                    edges, caption=f"Edge Image", use_column_width=True)
+
+            with col3:
+                st.image(
+                    processed_image.numpy()/255.0, caption=f"CH4 Image", use_column_width=True)
+
+            # Predict the class of the image
+            score = predict_class(processed_image, model)
+
+            # Display the prediction result
+            st.write(
+                f"Predicted Class: {CLASS_NAMES[score]}")
